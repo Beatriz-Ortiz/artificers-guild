@@ -1,73 +1,99 @@
-# React + TypeScript + Vite
+# 🎮 Artificer’s Guild — Interactive CV
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+> An interactive, D&D-inspired pixel art game that represents my professional journey as a Full Stack Developer.  
+> Not a traditional résumé — a playable experience.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🧙‍♀️ What is Artificer’s Guild?
 
-## React Compiler
+**Artificer’s Guild** is a web-based interactive CV built as a small RPG-style experience.  
+Instead of scrolling through a PDF, visitors explore a pixel-art world where each part of my curriculum is represented as a location, system or interaction.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This project is intentionally designed to show **how I think, design and build software**, not just what technologies I know.
 
-## Expanding the ESLint configuration
+---
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## 🗺️ The World
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+The hub is inspired by classic RPGs and Dungeons & Dragons:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+- 🏛️ **Guild Hall** → Professional experience & education
+- 🔮 **Spellbook** → Technical skills & tools
+- 🔨 **Forge** → Projects & products
+- 🌀 **Portal** → Contact, links & recruiter mode
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+Each building opens a different section of the CV through an interactive UI.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+---
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+## ✨ Why this project?
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Traditional CVs are:
+
+- static
+- generic
+- limited in how much personality they convey
+
+This project aims to:
+
+- demonstrate frontend architecture
+- show product and UX thinking
+- combine creativity with engineering
+- stand out without sacrificing clarity
+
+Yes, it’s overkill for a CV.  
+That’s exactly the point.
+
+---
+
+## 🧩 Features
+
+- 🎮 RPG-style interactive hub
+- 🎨 Custom pixel-art assets
+- 🌍 Bilingual content (ES / EN)
+- 🧱 Modular architecture (React + Phaser)
+- 📜 Recruiter Mode (classic CV view)
+- 💾 Data-driven content (JSON-based)
+- ⚙️ Clean separation between UI and game logic
+
+---
+
+## 🛠️ Tech Stack
+
+**Frontend**
+
+- React
+- TypeScript
+- Vite
+
+**Game / Interaction**
+
+- Phaser 3
+
+**UI / UX**
+
+- Custom pixel-art UI
+- Asset-based design system
+
+**Other**
+
+- LocalStorage
+- JSON-driven content
+- Modular scene management
+
+---
+
+## 📁 Project Structure
+
+```text
+src/
+ ├─ game/        # Phaser scenes and game logic
+ ├─ ui/          # React UI (panels, recruiter mode)
+ ├─ data/        # CV content (ES / EN)
+ ├─ i18n/        # Language handling
+ └─ assets/      # Pixel art (characters, buildings, UI)
+
+public/
+ └─ assets/      # Game-ready pixel art assets
 ```
