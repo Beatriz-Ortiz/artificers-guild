@@ -41,7 +41,7 @@ function Box({
   onClick?: () => void;
 }) {
   return (
-    <mesh position={position} onClick={onClick} receiveShadow castShadow>
+    <mesh position={position} onClick={onClick}>
       <boxGeometry args={args} />
       <meshStandardMaterial
         color={color}
@@ -59,7 +59,7 @@ function Box({
 function Torch({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <pointLight color="#ff8030" intensity={4} distance={12} decay={2} castShadow />
+      <pointLight color="#ff8030" intensity={4} distance={12} decay={2} />
       {/* Bracket */}
       <mesh position={[0, 0.05, 0]}>
         <boxGeometry args={[0.06, 0.18, 0.06]} />
@@ -240,6 +240,7 @@ function CentrePillar() {
     <group position={[0, 0, 0]}>
       {/* Overhead magic chandelier glow */}
       <pointLight color="#c9a84c" intensity={3} distance={6} decay={2} position={[0, 3.3, 0]} />
+      {/* (no castShadow — avoids shadow map texture unit overflow) */}
       {/* Hanging orb */}
       <mesh position={[0, 3.0, 0]}>
         <sphereGeometry args={[0.18, 12, 12]} />
@@ -666,7 +667,6 @@ export default function World3D() {
       }} />
 
       <Canvas
-        shadows
         camera={{ fov: 75, near: 0.1, far: 80, position: [0, 1.7, 0] }}
         gl={{ antialias: true }}
       >
