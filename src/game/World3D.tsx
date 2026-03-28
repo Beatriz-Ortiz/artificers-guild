@@ -1,6 +1,7 @@
-import { useRef, useState, useCallback, type Ref } from 'react';
-import { Canvas } from '@react-three/fiber';
+import { useRef, useState, useEffect, useCallback, type Ref } from 'react';
+import { Canvas, useFrame } from '@react-three/fiber';
 import { PointerLockControls, Html } from '@react-three/drei';
+import * as THREE from 'three';
 import type { PointerLockControls as PointerLockControlsImpl } from 'three-stdlib';
 import { usePlayerControls } from './usePlayerControls';
 import type { DoorId, DoorDef } from './usePlayerControls';
@@ -300,14 +301,118 @@ function WallSign({
   );
 }
 
+// ── Shadow figure (jump-scare NPC) ────────────────────────────────────
+
+// One position per arm end (just inside the end wall)
+const SHADOW_POSITIONS: [number, number, number][] = [
+  [0,              0, -(CTR + ARM_L - 0.6)],  // North
+  [0,              0, +(CTR + ARM_L - 0.6)],  // South
+  [-(CTR + ARM_L - 0.6), 0, 0             ],  // West
+  [+(CTR + ARM_L - 0.6), 0, 0             ],  // East
+];
+
+function ShadowFigure({ visible }: { visible: boolean }) {
+  const bodyRef = useRef<THREE.Mesh>(null);
+  const headRef = useRef<THREE.Mesh>(null);
+  const lightRef = useRef<THREE.PointLight>(null);
+
+  useFrame((_, delta) => {
+    const target = visible ? 1 : 0;
+    const speed  = delta * (visible ? 6 : 3); // fast fade-in, slower fade-out
+
+    [bodyRef, headRef].forEach((r) => {
+      if (!r.current) return;
+      const mat = r.current.material as THREE.MeshStandardMaterial;
+      mat.opacity = THREE.MathUtils.lerp(mat.opacity, target, speed);
+    });
+
+    if (lightRef.current) {
+      lightRef.current.intensity = THREE.MathUtils.lerp(
+        lightRef.current.intensity, visible ? 2 : 0, speed,
+      );
+    }
+  });
+
+  return (
+    <group>
+      {/* Body */}
+      <mesh ref={bodyRef} position={[0, 1.1, 0]}>
+        <boxGeometry args={[0.55, 1.4, 0.22]} />
+        <meshStandardMaterial
+          color="#080000"
+          transparent
+          opacity={0}
+          emissive="#300000"
+          emissiveIntensity={0.8}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Head */}
+      <mesh ref={headRef} position={[0, 2.1, 0]}>
+        <sphereGeometry args={[0.28, 10, 10]} />
+        <meshStandardMaterial
+          color="#080000"
+          transparent
+          opacity={0}
+          emissive="#300000"
+          emissiveIntensity={0.8}
+          depthWrite={false}
+        />
+      </mesh>
+      {/* Dim red glow */}
+      <pointLight ref={lightRef} color="#880000" intensity={0} distance={4} decay={2} />
+    </group>
+  );
+}
+
+// ── ScaryEvents (managed outside Canvas, positions injected) ──────────
+
+function ScaryEvents({ onFlash }: { onFlash: () => void }) {
+  const [armIdx, setArmIdx] = useState<number | null>(null);
+  const [show,   setShow]   = useState(false);
+  const timerRef = useRef<number>(0);
+
+  useEffect(() => {
+    const schedule = () => {
+      const delay = 25_000 + Math.random() * 55_000; // 25–80 s
+      timerRef.current = window.setTimeout(() => {
+        const idx = Math.floor(Math.random() * 4);
+        setArmIdx(idx);
+        setShow(true);
+        onFlash();
+        // visible for 2.8 s, then fade out and reschedule
+        window.setTimeout(() => {
+          setShow(false);
+          window.setTimeout(() => {
+            setArmIdx(null);
+            schedule();
+          }, 800); // wait for fade-out
+        }, 2_800);
+      }, delay);
+    };
+    schedule();
+    return () => window.clearTimeout(timerRef.current);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (armIdx === null) return null;
+
+  return (
+    <group position={SHADOW_POSITIONS[armIdx]}>
+      <ShadowFigure visible={show} />
+    </group>
+  );
+}
+
 // ── Full world ────────────────────────────────────────────────────────
 
 function CorridorWorld({
   nearDoor,
   onDoorClick,
+  onFlash,
 }: {
   nearDoor: DoorId | null;
   onDoorClick: (id: DoorId) => void;
+  onFlash: () => void;
 }) {
   const halfArm = ARM_L / 2;
 
@@ -383,6 +488,9 @@ function CorridorWorld({
         label="The Forge"  icon="🔨" color="#dc6414"
       />
 
+      {/* Scary events */}
+      <ScaryEvents onFlash={onFlash} />
+
       {/* Doors */}
       {DOOR_DEFS.map((def) => (
         <Door
@@ -449,20 +557,44 @@ function PointerLockOverlay({ locked }: { locked: boolean }) {
 
 // ── World3D ──────────────────────────────────────────────────────────
 
-export default function World3D() {
-  const [nearDoor, setNearDoor] = useState<DoorId | null>(null);
-  const [locked,   setLocked]   = useState(false);
-  const controlsRef = useRef<PointerLockControlsImpl | null>(null);
+const DOOR_CONFIG_MAP = {
+  quests:   { label: 'Guild Hall',  icon: '⚔',  color: '#cc2222' },
+  skills:   { label: 'Spellbook',   icon: '📖', color: '#2da091' },
+  projects: { label: 'The Forge',   icon: '🔨', color: '#dc6414' },
+  contact:  { label: 'Portal',      icon: '🔮', color: '#8855cc' },
+} as const;
 
-  const handleDoorClick = useCallback((id: DoorId) => {
+export default function World3D() {
+  const [nearDoor,    setNearDoor]    = useState<DoorId | null>(null);
+  const [locked,      setLocked]      = useState(false);
+  const [flashActive, setFlashActive] = useState(false);
+  const controlsRef = useRef<PointerLockControlsImpl | null>(null);
+  const nearDoorRef = useRef<DoorId | null>(null);
+
+  // Keep ref in sync so the click handler can read it synchronously
+  useEffect(() => { nearDoorRef.current = nearDoor; }, [nearDoor]);
+
+  const dispatchDoor = useCallback((id: DoorId) => {
     window.dispatchEvent(new CustomEvent('cv:buildingClicked', { detail: { id } }));
   }, []);
 
-  const handleCanvasClick = () => {
+  const triggerFlash = useCallback(() => {
+    setFlashActive(true);
+    setTimeout(() => setFlashActive(false), 600);
+  }, []);
+
+  const handleCanvasClick = useCallback(() => {
     if (!locked) {
       controlsRef.current?.lock();
+      return;
     }
-  };
+    // If standing near a door, click = interact
+    if (nearDoorRef.current) {
+      dispatchDoor(nearDoorRef.current);
+    }
+  }, [locked, dispatchDoor]);
+
+  const near = nearDoor ? DOOR_CONFIG_MAP[nearDoor] : null;
 
   return (
     <div
@@ -470,6 +602,68 @@ export default function World3D() {
       onClick={handleCanvasClick}
     >
       <PointerLockOverlay locked={locked} />
+
+      {/* ── Crosshair ── */}
+      {locked && (
+        <div style={{
+          position:  'absolute',
+          top: '50%', left: '50%',
+          transform: 'translate(-50%,-50%)',
+          zIndex:    2,
+          pointerEvents: 'none',
+          color: near ? near.color : 'rgba(255,255,255,0.55)',
+          fontSize: near ? '22px' : '14px',
+          lineHeight: 1,
+          textShadow: near ? `0 0 10px ${near.color}` : 'none',
+          transition: 'color 0.2s, font-size 0.2s',
+        }}>
+          {near ? near.icon : '·'}
+        </div>
+      )}
+
+      {/* ── Door interaction prompt (bottom-center HUD) ── */}
+      {locked && near && (
+        <div style={{
+          position:       'absolute',
+          bottom:         80,
+          left:           '50%',
+          transform:      'translateX(-50%)',
+          zIndex:         2,
+          pointerEvents:  'none',
+          textAlign:      'center',
+          animation:      'door-pulse 0.8s ease-in-out infinite alternate',
+        }}>
+          <div style={{
+            fontFamily:    "'Press Start 2P', monospace",
+            fontSize:      '11px',
+            color:         near.color,
+            textShadow:    `0 0 12px ${near.color}`,
+            letterSpacing: '0.05em',
+            marginBottom:  4,
+          }}>
+            [ E ] {near.label}
+          </div>
+          <div style={{
+            fontFamily: "'Crimson Text', Georgia, serif",
+            fontSize:   '0.8rem',
+            color:      'rgba(244,228,188,0.55)',
+            fontStyle:  'italic',
+          }}>
+            click or press E to enter
+          </div>
+        </div>
+      )}
+
+      {/* ── Scare flash overlay ── */}
+      <div style={{
+        position:   'absolute',
+        inset:      0,
+        zIndex:     3,
+        background: 'radial-gradient(ellipse at center, rgba(120,0,0,0.0) 30%, rgba(180,0,0,0.65) 100%)',
+        opacity:    flashActive ? 1 : 0,
+        transition: flashActive ? 'opacity 0.05s' : 'opacity 0.55s ease-out',
+        pointerEvents: 'none',
+      }} />
 
       <Canvas
         shadows
@@ -487,7 +681,11 @@ export default function World3D() {
 
         <PlayerRig onNearDoor={setNearDoor} />
 
-        <CorridorWorld nearDoor={nearDoor} onDoorClick={handleDoorClick} />
+        <CorridorWorld
+          nearDoor={nearDoor}
+          onDoorClick={dispatchDoor}
+          onFlash={triggerFlash}
+        />
       </Canvas>
     </div>
   );
