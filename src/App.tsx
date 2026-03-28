@@ -5,23 +5,41 @@ import HubOverlay from './components/ui/HubOverlay';
 import IntroSequence from './components/ui/IntroSequence';
 import SendingStone from './components/ui/SendingStone';
 import RecruiterModeView from './components/ui/RecruiterModeView';
+import GameToast from './components/ui/GameToast';
 import { usePanelEvents } from './hooks/usePanelEvents';
 import { useRecruiterMode } from './hooks/useRecruiterMode';
+import { useKonamiCode } from './hooks/useKonamiCode';
 import cv from './data/cv';
 import type { PanelId } from './types/cv';
 import './styles/globals.css';
 
+const HP_DRAIN_INTERVAL_MS = 30_000; // 1 HP per 30s
+const MP_DRAIN_INTERVAL_MS = 45_000; // 1 MP per 45s
+const PANEL_HP_RESTORE     = 15;
+const PANEL_MP_RESTORE     = 10;
+const KONAMI_ACTIVE_MS     = 8_000;
+
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
   const [visitedPanels, setVisitedPanels] = useState<Set<PanelId>>(new Set());
-  // Gate all React UI on fonts being ready to eliminate FOUT.
-  // document.fonts.ready resolves once every font referenced in CSS
-  // has finished loading (or timed out with display=block).
+  const [panelVisitCount, setPanelVisitCount] = useState(0);
   const [fontsReady, setFontsReady] = useState(false);
+
+  // HP / MP state (visual atmosphere bars)
+  const [hp, setHp] = useState(100);
+  const [mp, setMp] = useState(100);
+
+  // Konami Code easter egg
+  const [konamiActive, setKonamiActive] = useState(false);
 
   useEffect(() => {
     document.fonts.ready.then(() => setFontsReady(true));
   }, []);
+
+  useKonamiCode(() => {
+    setKonamiActive(true);
+    setTimeout(() => setKonamiActive(false), KONAMI_ACTIVE_MS);
+  });
 
   const { activePanel, closePanel } = usePanelEvents();
   const { recruiterMode, enterRecruiterMode, exitRecruiterMode } = useRecruiterMode();
@@ -30,8 +48,29 @@ export default function App() {
   useEffect(() => {
     if (activePanel) {
       setVisitedPanels((prev) => new Set([...prev, activePanel]));
+      setPanelVisitCount((c) => c + 1);
     }
   }, [activePanel]);
+
+  // Restore HP / MP on building visit
+  useEffect(() => {
+    if (activePanel) {
+      setHp((h) => Math.min(100, h + PANEL_HP_RESTORE));
+      setMp((m) => Math.min(100, m + PANEL_MP_RESTORE));
+    }
+  }, [activePanel]);
+
+  // HP drain
+  useEffect(() => {
+    const id = setInterval(() => setHp((h) => Math.max(0, h - 1)), HP_DRAIN_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
+
+  // MP drain
+  useEffect(() => {
+    const id = setInterval(() => setMp((m) => Math.max(0, m - 1)), MP_DRAIN_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, []);
 
   return (
     <div className="app-root">
@@ -50,6 +89,9 @@ export default function App() {
           <HubOverlay
             name={cv.contact.name}
             title={cv.contact.title}
+            hp={hp}
+            mp={mp}
+            konamiActive={konamiActive}
             onRecruiterMode={enterRecruiterMode}
           />
 
@@ -61,7 +103,13 @@ export default function App() {
             activePanel={activePanel}
             visitedPanels={visitedPanels}
             introComplete={introComplete}
+            hp={hp}
+            konamiActive={konamiActive}
+            panelVisitCount={panelVisitCount}
           />
+
+          {/* Layer 25: Game event toasts (goblin, mimic) */}
+          <GameToast />
         </>
       )}
 
