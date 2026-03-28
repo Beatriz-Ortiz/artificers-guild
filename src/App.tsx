@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Play from './ui/pages/Play';
 import PanelManager from './components/ui/PanelManager';
 import HubOverlay from './components/ui/HubOverlay';
@@ -6,10 +6,12 @@ import IntroSequence from './components/ui/IntroSequence';
 import SendingStone from './components/ui/SendingStone';
 import RecruiterModeView from './components/ui/RecruiterModeView';
 import GameToast from './components/ui/GameToast';
+import QuestModal from './components/quests/QuestModal';
 import { usePanelEvents } from './hooks/usePanelEvents';
 import { useRecruiterMode } from './hooks/useRecruiterMode';
 import { useKonamiCode } from './hooks/useKonamiCode';
 import cv from './data/cv';
+import { QUESTS } from './data/quests';
 import type { PanelId } from './types/cv';
 import './styles/globals.css';
 
@@ -32,6 +34,10 @@ export default function App() {
   // Konami Code easter egg
   const [konamiActive, setKonamiActive] = useState(false);
 
+  // Quest system
+  const [questBuilding,   setQuestBuilding]   = useState<PanelId | null>(null);
+  const [completedQuests, setCompletedQuests] = useState<Set<PanelId>>(new Set());
+
   useEffect(() => {
     document.fonts.ready.then(() => setFontsReady(true));
   }, []);
@@ -43,6 +49,32 @@ export default function App() {
 
   const { activePanel, closePanel } = usePanelEvents();
   const { recruiterMode, enterRecruiterMode, exitRecruiterMode } = useRecruiterMode();
+
+  // Route cv:buildingClicked through quest gate
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const { id } = (e as CustomEvent<{ id: PanelId }>).detail;
+      if (completedQuests.has(id)) {
+        window.dispatchEvent(new CustomEvent('cv:openPanel', { detail: { id } }));
+      } else {
+        setQuestBuilding(id);
+      }
+    };
+    window.addEventListener('cv:buildingClicked', handler);
+    return () => window.removeEventListener('cv:buildingClicked', handler);
+  }, [completedQuests]);
+
+  const completeQuest = useCallback((id: PanelId) => {
+    setCompletedQuests((prev) => new Set([...prev, id]));
+    setQuestBuilding(null);
+    window.dispatchEvent(new CustomEvent('cv:openPanel', { detail: { id } }));
+  }, []);
+
+  const skipQuest = useCallback((id: PanelId) => {
+    // Intentionally NOT added to completedQuests — quest will reappear next visit
+    setQuestBuilding(null);
+    window.dispatchEvent(new CustomEvent('cv:openPanel', { detail: { id } }));
+  }, []);
 
   // Track visited panels
   useEffect(() => {
@@ -97,6 +129,15 @@ export default function App() {
 
           {/* Layer 10: Content panels */}
           <PanelManager activePanel={activePanel} onClose={closePanel} />
+
+          {/* Layer 15: Quest modal (sits above panels, below sending stone) */}
+          {questBuilding && (
+            <QuestModal
+              quest={QUESTS[questBuilding]}
+              onComplete={completeQuest}
+              onSkip={skipQuest}
+            />
+          )}
 
           {/* Layer 20: Sending Stone */}
           <SendingStone

@@ -590,6 +590,143 @@
   100% { border-top-color: rgba(255, 200,   0, 0.9); box-shadow: 0 -3px 18px rgba(255, 200,   0, 0.35); }
 }
 
+/* ── Quest system ─────────────────────────────────────────── */
+.quest-backdrop {
+  position:        fixed;
+  inset:           0;
+  z-index:         15;
+  background:      rgba(0, 0, 0, 0.82);
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  padding:         16px;
+  box-sizing:      border-box;
+}
+
+.quest-modal {
+  position:       relative;
+  background:     #0a0814;
+  border:         2px solid rgba(201, 168, 76, 0.55);
+  border-radius:  var(--panel-radius);
+  box-shadow:     0 0 60px rgba(0,0,0,0.95),
+                  0 0 0 1px rgba(201,168,76,0.15),
+                  inset 0 0 80px rgba(0,0,0,0.6);
+  color:          var(--color-parchment);
+  font-family:    var(--font-body);
+  width:          min(540px, 96vw);
+  max-height:     min(88vh, 680px);
+  display:        flex;
+  flex-direction: column;
+  animation:      quest-in 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  overflow:       hidden;
+}
+
+.quest-enemy-name {
+  font-family:   var(--font-pixel);
+  font-size:     0.6rem;
+  color:         #cc2222;
+  letter-spacing: 0.1em;
+  text-shadow:   0 0 12px rgba(200, 30, 30, 0.55);
+  line-height:   1.4;
+}
+
+.quest-hp-track {
+  height:        12px;
+  background:    rgba(255, 255, 255, 0.06);
+  border:        1px solid rgba(200, 30, 30, 0.35);
+  border-radius: 6px;
+  overflow:      hidden;
+}
+
+.quest-hp-fill {
+  height:        100%;
+  background:    linear-gradient(90deg, #7a0000, #cc2222);
+  border-radius: 6px;
+  transition:    width 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.quest-choice-btn {
+  width:         100%;
+  background:    rgba(201, 168, 76, 0.05);
+  border:        1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 5px;
+  color:         rgba(244, 228, 188, 0.88);
+  font-family:   var(--font-body);
+  font-size:     0.95rem;
+  line-height:   1.55;
+  padding:       11px 14px;
+  cursor:        pointer;
+  text-align:    left;
+  transition:    background 0.14s, border-color 0.14s;
+}
+
+.quest-choice-btn:hover:not(:disabled) {
+  background:   rgba(201, 168, 76, 0.13);
+  border-color: var(--color-gold);
+  color:        var(--color-parchment);
+}
+
+.quest-choice-btn:disabled {
+  opacity: 0.5;
+  cursor:  default;
+}
+
+.quest-yield-btn {
+  background:    none;
+  border:        1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+  color:         rgba(244, 228, 188, 0.35);
+  font-family:   var(--font-pixel);
+  font-size:     0.28rem;
+  padding:       7px 16px;
+  cursor:        pointer;
+  letter-spacing: 0.06em;
+  transition:    color 0.14s, border-color 0.14s;
+}
+
+.quest-yield-btn:hover {
+  color:        rgba(244, 228, 188, 0.65);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.quest-victory-title {
+  font-family:    var(--font-pixel);
+  font-size:      0.9rem;
+  color:          var(--color-gold);
+  text-align:     center;
+  letter-spacing: 0.14em;
+  animation:      quest-victory-glow 1.3s ease-in-out infinite;
+}
+
+.quest-claim-btn {
+  background:    rgba(201, 168, 76, 0.12);
+  border:        2px solid var(--color-gold);
+  border-radius: 5px;
+  color:         var(--color-gold);
+  font-family:   var(--font-pixel);
+  font-size:     0.42rem;
+  padding:       12px 28px;
+  cursor:        pointer;
+  letter-spacing: 0.08em;
+  transition:    background 0.18s, color 0.18s;
+  animation:     fade-in 0.35s ease;
+}
+
+.quest-claim-btn:hover {
+  background: var(--color-gold);
+  color:      #0a0814;
+}
+
+@keyframes quest-in {
+  from { transform: scale(0.93) translateY(18px); opacity: 0; }
+  to   { transform: scale(1)    translateY(0);    opacity: 1; }
+}
+
+@keyframes quest-victory-glow {
+  0%, 100% { text-shadow: 0 0 8px  rgba(201,168,76,0.5), 0 0 20px rgba(201,168,76,0.2); }
+  50%       { text-shadow: 0 0 18px rgba(201,168,76,0.9), 0 0 40px rgba(201,168,76,0.5); }
+}
+
 /* ── Konami hub bar ───────────────────────────────────────── */
 .hub-bar--konami {
   animation: konami-pulse 0.6s linear infinite !important;
@@ -670,7 +807,11 @@
   .skill-bar-fill,
   .card-inner,
   .stone-gem,
-  .stone-bubble {
+  .stone-bubble,
+  .quest-modal,
+  .quest-hp-fill,
+  .quest-victory-title,
+  .quest-claim-btn {
     transition: none !important;
     animation: none !important;
   }

@@ -60,7 +60,8 @@ export default class HubScene extends Phaser.Scene {
     if (this.mimicIdx === idx) {
       this.triggerMimic(idx, id);
     } else {
-      window.dispatchEvent(new CustomEvent("cv:openPanel", { detail: { id } }));
+      // cv:buildingClicked goes through the quest system in App.tsx
+      window.dispatchEvent(new CustomEvent("cv:buildingClicked", { detail: { id } }));
     }
   }
 
