@@ -52,7 +52,7 @@ function EnemyHeader({
                 display:        'flex',
                 justifyContent: 'space-between',
                 fontFamily:     'var(--font-pixel)',
-                fontSize:       '0.28rem',
+                fontSize:       '8px',
                 color:          'rgba(204,34,34,0.7)',
                 marginBottom:   4,
               }}
@@ -198,7 +198,7 @@ function CombatQuestView({
         <div
           style={{
             fontFamily:  'var(--font-pixel)',
-            fontSize:    '0.32rem',
+            fontSize:    '8px',
             color:       '#cc8822',
             letterSpacing: '0.06em',
             lineHeight:  1.8,
@@ -229,7 +229,7 @@ function CombatQuestView({
       <div
         style={{
           fontFamily:    'var(--font-pixel)',
-          fontSize:      '0.28rem',
+          fontSize:      '8px',
           color:         'rgba(244,228,188,0.3)',
           textAlign:     'right',
           letterSpacing: '0.06em',
@@ -294,7 +294,7 @@ function TriviaQuestView({
           display:       'flex',
           justifyContent: 'space-between',
           fontFamily:    'var(--font-pixel)',
-          fontSize:      '0.28rem',
+          fontSize:      '8px',
           color:         'rgba(244,228,188,0.4)',
           letterSpacing: '0.06em',
         }}
@@ -361,7 +361,7 @@ function TriviaQuestView({
           <div
             style={{
               fontFamily:   'var(--font-pixel)',
-              fontSize:     '0.3rem',
+              fontSize:     '8px',
               color:        selected.isCorrect ? '#2da091' : '#cc8822',
               letterSpacing: '0.06em',
               lineHeight:   1.8,
@@ -414,7 +414,7 @@ function PortalQuestView({
       <div
         style={{
           fontFamily:    'var(--font-pixel)',
-          fontSize:      '0.4rem',
+          fontSize:      '9px',
           color:         'var(--color-gold)',
           letterSpacing: '0.1em',
           textAlign:     'center',

@@ -1,85 +1,80 @@
 import { useEffect, useState } from 'react';
-import TypewriterText from '../shared/TypewriterText';
 
 interface Props {
   onComplete: () => void;
 }
 
-const INTRO_MESSAGE = `A traveller arrives at the Artificer's Guild. The year is ${new Date().getFullYear()}. Seek knowledge within these halls.`;
+const BLINK_INTERVAL = 550;
 
 export default function IntroSequence({ onComplete }: Props) {
-  const [d20Value, setD20Value] = useState<number>(1);
-  const [d20Settled, setD20Settled] = useState(false);
-  const [textComplete, setTextComplete] = useState(false);
-  const [showButton, setShowButton] = useState(false);
+  const [blink, setBlink] = useState(true);
+  const [fadeOut, setFadeOut] = useState(false);
 
-  // d20 roll animation
   useEffect(() => {
-    let frame = 0;
-    const id = setInterval(() => {
-      frame++;
-      if (frame < 24) {
-        setD20Value(Math.floor(Math.random() * 20) + 1);
-      } else {
-        setD20Value(20);
-        setD20Settled(true);
-        clearInterval(id);
-      }
-    }, 75);
+    const id = setInterval(() => setBlink((b) => !b), BLINK_INTERVAL);
     return () => clearInterval(id);
   }, []);
 
-  // Show button after text finishes OR after 5s (whichever comes first)
+  // Keyboard: Enter or Space to start
   useEffect(() => {
-    const id = setTimeout(() => setShowButton(true), 5000);
-    return () => clearTimeout(id);
-  }, []);
+    const onKey = (e: KeyboardEvent) => {
+      if (e.code === 'Enter' || e.code === 'Space') start();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    if (textComplete) setShowButton(true);
-  }, [textComplete]);
+  const start = () => {
+    if (fadeOut) return;
+    setFadeOut(true);
+    setTimeout(onComplete, 500);
+  };
 
   return (
     <div
-      className="intro-overlay"
-      onClick={() => {
-        if (showButton) onComplete();
-      }}
+      className="startmenu-root"
+      style={{ opacity: fadeOut ? 0 : 1, transition: 'opacity 0.5s ease' }}
+      onClick={start}
     >
-      <div className="parchment intro-parchment">
-        {/* d20 in top-right corner */}
-        <div className="intro-d20">
-          <div className={`intro-d20-face${d20Settled ? ' nat20' : ''}`}>{d20Value}</div>
-          {d20Settled && <span>NAT 20</span>}
+      {/* Scanlines overlay */}
+      <div className="startmenu-scanlines" />
+
+      {/* Content */}
+      <div className="startmenu-content">
+        {/* Top eyebrow */}
+        <div className="startmenu-eyebrow">✦ Interactive Portfolio ✦</div>
+
+        {/* Main title */}
+        <h1 className="startmenu-title">
+          Artificer's<br />Guild
+        </h1>
+
+        {/* Subtitle */}
+        <p className="startmenu-subtitle">
+          A D&amp;D-themed CV awaits within these halls.<br />
+          Explore, face challenges, and uncover the records.
+        </p>
+
+        {/* Divider */}
+        <div className="startmenu-divider" />
+
+        {/* Press Start */}
+        <button
+          className="startmenu-start-btn"
+          style={{ opacity: blink ? 1 : 0 }}
+          onClick={(e) => { e.stopPropagation(); start(); }}
+        >
+          ▶ &nbsp; START GAME
+        </button>
+
+        <div className="startmenu-hint">
+          Press <kbd>Enter</kbd> or click to begin
         </div>
 
-        <div className="intro-eyebrow">✦ Artificer's Guild ✦</div>
-
-        <div className="intro-message">
-          <TypewriterText
-            text={INTRO_MESSAGE}
-            speed={32}
-            onComplete={() => setTextComplete(true)}
-          />
+        {/* Footer */}
+        <div className="startmenu-footer">
+          © {new Date().getFullYear()} &nbsp;·&nbsp; WASD + Mouse to explore &nbsp;·&nbsp; E to interact
         </div>
-
-        {d20Settled && (
-          <div className="intro-nat20-label">Natural 20 — Access Granted</div>
-        )}
-
-        {showButton && (
-          <div>
-            <button
-              className="intro-enter-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                onComplete();
-              }}
-            >
-              Enter the Guild
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
