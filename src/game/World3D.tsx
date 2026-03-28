@@ -6,9 +6,9 @@ import { usePlayerControls } from './usePlayerControls';
 import type { DoorId, DoorDef } from './usePlayerControls';
 
 // ── Palette ─────────────────────────────────────────────────────────
-const WALL_COLOR  = '#2a2018';
-const FLOOR_COLOR = '#1e1810';
-const CEIL_COLOR  = '#1a1510';
+const WALL_COLOR  = '#3a2e22';
+const FLOOR_COLOR = '#2a2018';
+const CEIL_COLOR  = '#252015';
 
 // ── Corridor geometry constants ──────────────────────────────────────
 // Each arm: 3 units wide, 8 units long, 3.5 units tall
@@ -58,10 +58,16 @@ function Box({
 function Torch({ position }: { position: [number, number, number] }) {
   return (
     <group position={position}>
-      <pointLight color="#ff7020" intensity={1.8} distance={7} decay={2} castShadow />
+      <pointLight color="#ff8030" intensity={4} distance={12} decay={2} castShadow />
+      {/* Bracket */}
+      <mesh position={[0, 0.05, 0]}>
+        <boxGeometry args={[0.06, 0.18, 0.06]} />
+        <meshStandardMaterial color="#584030" roughness={0.9} />
+      </mesh>
+      {/* Flame glow */}
       <mesh>
-        <sphereGeometry args={[0.08, 8, 8]} />
-        <meshStandardMaterial color="#ffaa40" emissive="#ff7020" emissiveIntensity={2} />
+        <sphereGeometry args={[0.1, 8, 8]} />
+        <meshStandardMaterial color="#ffcc60" emissive="#ff7020" emissiveIntensity={3} />
       </mesh>
     </group>
   );
@@ -107,8 +113,8 @@ function Door({
       {/* Accent light */}
       <pointLight
         color={cfg.lightColor}
-        intensity={isNear ? 2.5 : 1.2}
-        distance={5}
+        intensity={isNear ? 5 : 2.5}
+        distance={8}
         decay={2}
       />
 
@@ -150,30 +156,35 @@ function Door({
         </mesh>
       ))}
 
-      {/* HTML label */}
+      {/* HTML label — distanceFactor keeps it readable at any distance */}
       <Html
-        position={[0, doorH + 0.5, 0]}
+        position={[0, doorH + 0.7, 0]}
         center
         occlude={false}
+        distanceFactor={6}
         style={{ pointerEvents: 'none' }}
       >
         <div style={{
-          fontFamily:    'var(--font-pixel)',
-          fontSize:      '11px',
-          color:         isNear ? '#ffffff' : 'rgba(255,255,255,0.55)',
+          fontFamily:    "'Press Start 2P', monospace",
+          fontSize:      '13px',
+          color:         isNear ? '#ffffff' : 'rgba(255,255,255,0.75)',
           textAlign:     'center',
           whiteSpace:    'nowrap',
-          textShadow:    '0 0 8px ' + cfg.lightColor,
+          textShadow:    `0 0 12px ${cfg.lightColor}, 0 0 24px ${cfg.lightColor}`,
           transition:    'color 0.3s, text-shadow 0.3s',
           pointerEvents: 'none',
+          lineHeight:    1.6,
         }}>
-          {cfg.icon} {cfg.label}
+          <span style={{ fontSize: '18px' }}>{cfg.icon}</span>
+          <br />
+          {cfg.label}
           {isNear && (
             <div style={{
-              marginTop:  4,
-              fontSize:   '9px',
-              color:      cfg.lightColor,
-              animation:  'door-pulse 1s ease-in-out infinite alternate',
+              marginTop:     6,
+              fontSize:      '11px',
+              color:         cfg.lightColor,
+              animation:     'door-pulse 0.8s ease-in-out infinite alternate',
+              letterSpacing: '0.05em',
             }}>
               [E] Enter
             </div>
@@ -187,29 +198,104 @@ function Door({
 // ── Corridor segments ─────────────────────────────────────────────────
 
 function CorridorSegment({
-  // Center of the corridor segment
   cx, cz,
-  width, length, // width = X extent, length = Z extent
+  width, length,
+  wallTint = WALL_COLOR,
 }: {
   cx: number; cz: number;
   width: number; length: number;
+  wallTint?: string;
 }) {
   const hw = width  / 2;
   const hl = length / 2;
   const y  = ARM_H  / 2;
 
+  // Stone block detail strip along base of walls
+  const TRIM = '#1a1208';
+
   return (
     <group position={[cx, 0, cz]}>
       {/* Floor */}
-      <Box position={[0, 0, 0]}           args={[width, 0.1, length]}   color={FLOOR_COLOR} />
+      <Box position={[0, 0, 0]}     args={[width, 0.1, length]}  color={FLOOR_COLOR} />
       {/* Ceiling */}
-      <Box position={[0, ARM_H, 0]}       args={[width, 0.1, length]}   color={CEIL_COLOR}  />
-      {/* Walls along Z (left/right when moving along Z axis) */}
-      <Box position={[-hw, y, 0]}         args={[0.1, ARM_H, length]}   color={WALL_COLOR}  />
-      <Box position={[+hw, y, 0]}         args={[0.1, ARM_H, length]}   color={WALL_COLOR}  />
-      {/* Walls along X (front/back when moving along X axis) */}
-      <Box position={[0, y, -hl]}         args={[width, ARM_H, 0.1]}    color={WALL_COLOR}  />
-      <Box position={[0, y, +hl]}         args={[width, ARM_H, 0.1]}    color={WALL_COLOR}  />
+      <Box position={[0, ARM_H, 0]} args={[width, 0.1, length]}  color={CEIL_COLOR}  />
+      {/* Side walls (-X and +X) */}
+      <Box position={[-hw, y, 0]}   args={[0.12, ARM_H, length]} color={wallTint}  />
+      <Box position={[+hw, y, 0]}   args={[0.12, ARM_H, length]} color={wallTint}  />
+      {/* Front/back walls (-Z and +Z) */}
+      <Box position={[0, y, -hl]}   args={[width, ARM_H, 0.12]}  color={wallTint}  />
+      <Box position={[0, y, +hl]}   args={[width, ARM_H, 0.12]}  color={wallTint}  />
+      {/* Baseboard trim */}
+      <Box position={[-hw, 0.12, 0]}  args={[0.14, 0.22, length]} color={TRIM} />
+      <Box position={[+hw, 0.12, 0]}  args={[0.14, 0.22, length]} color={TRIM} />
+    </group>
+  );
+}
+
+// ── Crossroads centre pillar ──────────────────────────────────────────
+
+function CentrePillar() {
+  return (
+    <group position={[0, 0, 0]}>
+      {/* Overhead magic chandelier glow */}
+      <pointLight color="#c9a84c" intensity={3} distance={6} decay={2} position={[0, 3.3, 0]} />
+      {/* Hanging orb */}
+      <mesh position={[0, 3.0, 0]}>
+        <sphereGeometry args={[0.18, 12, 12]} />
+        <meshStandardMaterial color="#ffe090" emissive="#c9a84c" emissiveIntensity={3} />
+      </mesh>
+      {/* Thin chain suggestion */}
+      <mesh position={[0, 3.25, 0]}>
+        <cylinderGeometry args={[0.015, 0.015, 0.5, 6]} />
+        <meshStandardMaterial color="#7a6040" roughness={0.8} />
+      </mesh>
+      {/* Floor rune circle — flat disc */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+        <ringGeometry args={[0.6, 0.8, 32]} />
+        <meshStandardMaterial color="#c9a84c" emissive="#a07828" emissiveIntensity={0.6} />
+      </mesh>
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.06, 0]}>
+        <ringGeometry args={[1.2, 1.35, 32]} />
+        <meshStandardMaterial color="#c9a84c" emissive="#a07828" emissiveIntensity={0.4} />
+      </mesh>
+    </group>
+  );
+}
+
+// ── Directional wall sign ─────────────────────────────────────────────
+
+function WallSign({
+  position,
+  rotation,
+  label,
+  icon,
+  color,
+}: {
+  position: [number, number, number];
+  rotation: [number, number, number];
+  label: string;
+  icon: string;
+  color: string;
+}) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Plaque */}
+      <mesh position={[0, 0, 0.01]}>
+        <boxGeometry args={[0.9, 0.35, 0.04]} />
+        <meshStandardMaterial color="#3a2810" roughness={0.9} emissive={color} emissiveIntensity={0.08} />
+      </mesh>
+      <Html center distanceFactor={4} position={[0, 0, 0.04]} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          fontFamily:  "'Press Start 2P', monospace",
+          fontSize:    '11px',
+          color:       '#e8c96a',
+          whiteSpace:  'nowrap',
+          textShadow:  `0 0 8px ${color}`,
+          pointerEvents: 'none',
+        }}>
+          {icon} {label}
+        </div>
+      </Html>
     </group>
   );
 }
@@ -225,45 +311,77 @@ function CorridorWorld({
 }) {
   const halfArm = ARM_L / 2;
 
+  // Slightly tinted wall colors per arm
+  const TINT_N = '#2e2840'; // skills — teal-ish dark
+  const TINT_S = '#2e2040'; // contact — purple-ish dark
+  const TINT_W = '#302018'; // quests — iron dark
+  const TINT_E = '#322010'; // projects — forge warm
+  const wallH  = ARM_H / 2;
+
   return (
     <group>
       {/* Center crossroads */}
       <CorridorSegment cx={0} cz={0} width={ARM_W + CTR * 2} length={ARM_W + CTR * 2} />
 
-      {/* North arm (−Z) */}
-      <CorridorSegment cx={0} cz={-(CTR + halfArm)} width={ARM_W} length={ARM_L} />
-      {/* South arm (+Z) */}
-      <CorridorSegment cx={0} cz={+(CTR + halfArm)} width={ARM_W} length={ARM_L} />
-      {/* West arm (−X) */}
-      <CorridorSegment cx={-(CTR + halfArm)} cz={0} width={ARM_L} length={ARM_W} />
-      {/* East arm (+X) */}
-      <CorridorSegment cx={+(CTR + halfArm)} cz={0} width={ARM_L} length={ARM_W} />
+      {/* North arm (−Z) — skills/teal */}
+      <CorridorSegment cx={0} cz={-(CTR + halfArm)} width={ARM_W} length={ARM_L} wallTint={TINT_N} />
+      {/* South arm (+Z) — contact/purple */}
+      <CorridorSegment cx={0} cz={+(CTR + halfArm)} width={ARM_W} length={ARM_L} wallTint={TINT_S} />
+      {/* West arm (−X) — quests/red */}
+      <CorridorSegment cx={-(CTR + halfArm)} cz={0} width={ARM_L} length={ARM_W} wallTint={TINT_W} />
+      {/* East arm (+X) — projects/orange */}
+      <CorridorSegment cx={+(CTR + halfArm)} cz={0} width={ARM_L} length={ARM_W} wallTint={TINT_E} />
 
       {/* End walls for each arm */}
-      {/* North */}
-      <Box position={[0, ARM_H / 2, -(CTR + ARM_L)]} args={[ARM_W, ARM_H, 0.1]} color={WALL_COLOR} />
-      {/* South */}
-      <Box position={[0, ARM_H / 2, +(CTR + ARM_L)]} args={[ARM_W, ARM_H, 0.1]} color={WALL_COLOR} />
-      {/* West */}
-      <Box position={[-(CTR + ARM_L), ARM_H / 2, 0]} args={[0.1, ARM_H, ARM_W]} color={WALL_COLOR} />
-      {/* East */}
-      <Box position={[+(CTR + ARM_L), ARM_H / 2, 0]} args={[0.1, ARM_H, ARM_W]} color={WALL_COLOR} />
+      <Box position={[0, wallH, -(CTR + ARM_L)]} args={[ARM_W, ARM_H, 0.12]} color={TINT_N} />
+      <Box position={[0, wallH, +(CTR + ARM_L)]} args={[ARM_W, ARM_H, 0.12]} color={TINT_S} />
+      <Box position={[-(CTR + ARM_L), wallH, 0]} args={[0.12, ARM_H, ARM_W]} color={TINT_W} />
+      <Box position={[+(CTR + ARM_L), wallH, 0]} args={[0.12, ARM_H, ARM_W]} color={TINT_E} />
 
-      {/* Torches near crossroads */}
-      <Torch position={[-1.2, 2.8, -1.2]} />
-      <Torch position={[+1.2, 2.8, -1.2]} />
-      <Torch position={[-1.2, 2.8, +1.2]} />
-      <Torch position={[+1.2, 2.8, +1.2]} />
+      {/* Central chandelier + rune circle */}
+      <CentrePillar />
+
+      {/* Torches near crossroads (on the arm entries) */}
+      <Torch position={[-1.35, 2.6, -(CTR + 0.3)]} />
+      <Torch position={[+1.35, 2.6, -(CTR + 0.3)]} />
+      <Torch position={[-1.35, 2.6, +(CTR + 0.3)]} />
+      <Torch position={[+1.35, 2.6, +(CTR + 0.3)]} />
+      <Torch position={[-(CTR + 0.3), 2.6, -1.35]} />
+      <Torch position={[-(CTR + 0.3), 2.6, +1.35]} />
+      <Torch position={[+(CTR + 0.3), 2.6, -1.35]} />
+      <Torch position={[+(CTR + 0.3), 2.6, +1.35]} />
 
       {/* Mid-arm torches */}
-      <Torch position={[-1.3, 2.8, -(CTR + halfArm)]} />
-      <Torch position={[+1.3, 2.8, -(CTR + halfArm)]} />
-      <Torch position={[-1.3, 2.8, +(CTR + halfArm)]} />
-      <Torch position={[+1.3, 2.8, +(CTR + halfArm)]} />
-      <Torch position={[-(CTR + halfArm), 2.8, -1.3]} />
-      <Torch position={[-(CTR + halfArm), 2.8, +1.3]} />
-      <Torch position={[+(CTR + halfArm), 2.8, -1.3]} />
-      <Torch position={[+(CTR + halfArm), 2.8, +1.3]} />
+      <Torch position={[-1.35, 2.6, -(CTR + halfArm)]} />
+      <Torch position={[+1.35, 2.6, -(CTR + halfArm)]} />
+      <Torch position={[-1.35, 2.6, +(CTR + halfArm)]} />
+      <Torch position={[+1.35, 2.6, +(CTR + halfArm)]} />
+      <Torch position={[-(CTR + halfArm), 2.6, -1.35]} />
+      <Torch position={[-(CTR + halfArm), 2.6, +1.35]} />
+      <Torch position={[+(CTR + halfArm), 2.6, -1.35]} />
+      <Torch position={[+(CTR + halfArm), 2.6, +1.35]} />
+
+      {/* Directional wall signs at crossroads entries */}
+      <WallSign
+        position={[0, 2.0, -(CTR - 0.08)]}
+        rotation={[0, 0, 0]}
+        label="Spellbook"  icon="📖" color="#2da091"
+      />
+      <WallSign
+        position={[0, 2.0, +(CTR - 0.08)]}
+        rotation={[0, Math.PI, 0]}
+        label="Portal"     icon="🔮" color="#8855cc"
+      />
+      <WallSign
+        position={[-(CTR - 0.08), 2.0, 0]}
+        rotation={[0, Math.PI / 2, 0]}
+        label="Guild Hall" icon="⚔" color="#cc2222"
+      />
+      <WallSign
+        position={[+(CTR - 0.08), 2.0, 0]}
+        rotation={[0, -Math.PI / 2, 0]}
+        label="The Forge"  icon="🔨" color="#dc6414"
+      />
 
       {/* Doors */}
       {DOOR_DEFS.map((def) => (
@@ -358,8 +476,8 @@ export default function World3D() {
         camera={{ fov: 75, near: 0.1, far: 80, position: [0, 1.7, 0] }}
         gl={{ antialias: true }}
       >
-        <fog attach="fog" args={['#0a0806', 8, 40]} />
-        <ambientLight intensity={0.06} />
+        <fog attach="fog" args={['#0a0806', 14, 50]} />
+        <ambientLight intensity={0.25} />
 
         <PointerLockControls
           ref={controlsRef as Ref<PointerLockControlsImpl>}
