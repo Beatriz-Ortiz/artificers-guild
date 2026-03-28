@@ -522,6 +522,17 @@ export default function World3D() {
 
   useEffect(() => { nearDoorRef.current = nearDoor; }, [nearDoor]);
 
+  // Release pointer lock whenever a quest modal or panel opens
+  useEffect(() => {
+    const unlock = () => controlsRef.current?.unlock();
+    window.addEventListener('cv:buildingClicked', unlock);
+    window.addEventListener('cv:openPanel',       unlock);
+    return () => {
+      window.removeEventListener('cv:buildingClicked', unlock);
+      window.removeEventListener('cv:openPanel',       unlock);
+    };
+  }, []);
+
   const dispatchDoor = useCallback((id: DoorId) => {
     window.dispatchEvent(new CustomEvent('cv:buildingClicked', { detail: { id } }));
   }, []);
