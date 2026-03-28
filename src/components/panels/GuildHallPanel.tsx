@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import ParchmentPanel from '../shared/ParchmentPanel';
+import ChronicleView from './ChronicleView';
 import type { Experience } from '../../types/cv';
 
 interface Props {
@@ -155,14 +156,50 @@ function ExperienceEntry({ exp, defaultOpen }: { exp: Experience; defaultOpen: b
   );
 }
 
+type ViewMode = 'scroll' | 'chronicle';
+
 export default function GuildHallPanel({ experience, onClose }: Props) {
+  const [viewMode, setViewMode] = useState<ViewMode>('scroll');
+
   return (
     <ParchmentPanel title="Guild Hall" subtitle="QUEST RECORDS" onClose={onClose}>
-      <div style={{ paddingTop: 8 }}>
-        {experience.map((exp, i) => (
-          <ExperienceEntry key={exp.id} exp={exp} defaultOpen={i === 0} />
+      {/* View toggle */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, justifyContent: 'flex-end' }}>
+        {(['scroll', 'chronicle'] as ViewMode[]).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            style={{
+              background:   viewMode === mode ? 'rgba(201,168,76,0.2)' : 'none',
+              border:       `1px solid rgba(201,168,76,${viewMode === mode ? 0.6 : 0.25})`,
+              borderRadius: 4,
+              cursor:       'pointer',
+              padding:      '5px 12px',
+              fontFamily:   'var(--font-pixel)',
+              fontSize:     '0.3rem',
+              color:        viewMode === mode ? 'var(--color-gold)' : 'var(--color-text-muted)',
+              letterSpacing: '0.06em',
+              transition:   'all 0.15s ease',
+            }}
+          >
+            {mode === 'scroll' ? '📜 Scroll' : '📖 Chronicle'}
+          </button>
         ))}
       </div>
+
+      {viewMode === 'scroll' && (
+        <div style={{ paddingTop: 8, animation: 'fade-in 0.2s ease' }}>
+          {experience.map((exp, i) => (
+            <ExperienceEntry key={exp.id} exp={exp} defaultOpen={i === 0} />
+          ))}
+        </div>
+      )}
+
+      {viewMode === 'chronicle' && (
+        <div style={{ animation: 'fade-in 0.2s ease' }}>
+          <ChronicleView experience={experience} />
+        </div>
+      )}
     </ParchmentPanel>
   );
 }
