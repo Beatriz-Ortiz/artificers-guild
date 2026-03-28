@@ -118,6 +118,145 @@ function BrokenColumn({ position, height = 3 }: { position: [number,number,numbe
   );
 }
 
+// ─── Themed interior decorations ─────────────────────────────────────
+
+function BuildingInterior({ id, hd }: { id: DoorId; hd: number }) {
+  const WOOD = '#2a1a08';
+  const IRON = '#282624';
+  const back = -hd + 0.8; // z near back wall
+
+  if (id === 'quests') {
+    // Guild Hall — throne + weapon rack
+    return (
+      <group>
+        {/* Throne seat */}
+        <Box position={[0, 0.45, back + 0.3]} args={[1.4, 0.9, 0.8]} color={STONE_D} />
+        {/* Throne back */}
+        <Box position={[0, 1.55, back]}        args={[1.4, 1.3, 0.35]} color={STONE_D} />
+        {/* Throne armrests */}
+        <Box position={[-0.6, 0.95, back + 0.2]} args={[0.18, 0.2, 0.8]} color={STONE_L} />
+        <Box position={[+0.6, 0.95, back + 0.2]} args={[0.18, 0.2, 0.8]} color={STONE_L} />
+        {/* Wall weapon rack — horizontal bar */}
+        <Box position={[-2.5, 2.5, back + 0.1]} args={[2.0, 0.1, 0.1]} color={IRON} />
+        {/* Two "swords" hanging — thin diagonal boxes */}
+        <mesh position={[-2.0, 2.1, back + 0.12]} rotation={[0, 0, 0.45]}>
+          <boxGeometry args={[0.07, 1.4, 0.07]} />
+          <meshStandardMaterial color={IRON} roughness={0.7} metalness={0.4} />
+        </mesh>
+        <mesh position={[-3.0, 2.1, back + 0.12]} rotation={[0, 0, -0.45]}>
+          <boxGeometry args={[0.07, 1.4, 0.07]} />
+          <meshStandardMaterial color={IRON} roughness={0.7} metalness={0.4} />
+        </mesh>
+        {/* Shield on back wall */}
+        <mesh position={[2.5, 2.4, back + 0.15]}>
+          <cylinderGeometry args={[0.55, 0.55, 0.1, 12]} />
+          <meshStandardMaterial color="#4a1010" roughness={0.8} emissive="#330808" emissiveIntensity={0.3} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (id === 'skills') {
+    // Spellbook — bookshelves + lectern
+    return (
+      <group>
+        {/* Bookshelf back wall — 3 shelf rows */}
+        {[0, 1, 2].map((row) => (
+          <group key={row}>
+            <Box position={[0, 0.6 + row * 1.1, back + 0.2]} args={[5.0, 0.1, 0.5]} color={WOOD} />
+            {/* Books — small upright slabs */}
+            {[-2, -1.3, -0.6, 0.1, 0.7, 1.4, 2.1].map((bx, i) => (
+              <Box
+                key={i}
+                position={[bx, 0.95 + row * 1.1, back + 0.22]}
+                args={[0.18, 0.65, 0.4]}
+                color={['#5a2020','#204a30','#1a2050','#503010','#3a1040'][i % 5]}
+              />
+            ))}
+          </group>
+        ))}
+        {/* Lectern */}
+        <Box position={[0, 0.55, back + 2.0]} args={[0.5, 1.1, 0.4]} color={WOOD} />
+        <mesh position={[0, 1.2, back + 2.1]} rotation={[-0.35, 0, 0]}>
+          <boxGeometry args={[0.7, 0.05, 0.55]} />
+          <meshStandardMaterial color={WOOD} roughness={0.9} />
+        </mesh>
+        {/* Floor magic circle */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.08, back + 2.0]}>
+          <ringGeometry args={[0.7, 0.85, 24]} />
+          <meshStandardMaterial color="#2da091" emissive="#2da091" emissiveIntensity={0.5} />
+        </mesh>
+      </group>
+    );
+  }
+
+  if (id === 'projects') {
+    // The Forge — anvil + furnace
+    return (
+      <group>
+        {/* Anvil base */}
+        <Box position={[-1, 0.35, back + 1.5]} args={[1.0, 0.7, 0.8]} color={IRON} />
+        {/* Anvil horn */}
+        <mesh position={[-0.35, 0.75, back + 1.5]}>
+          <boxGeometry args={[0.8, 0.3, 0.5]} />
+          <meshStandardMaterial color={IRON} roughness={0.6} metalness={0.5} />
+        </mesh>
+        <mesh position={[-0.1, 0.78, back + 1.4]} rotation={[0, 0, 0.3]}>
+          <boxGeometry args={[0.55, 0.22, 0.38]} />
+          <meshStandardMaterial color={IRON} roughness={0.6} metalness={0.5} />
+        </mesh>
+        {/* Furnace opening in back wall */}
+        <Box position={[2, 0.9, back + 0.15]} args={[1.6, 1.8, 0.3]} color={STONE_D} />
+        <mesh position={[2, 0.8, back + 0.22]}>
+          <boxGeometry args={[1.0, 1.2, 0.1]} />
+          <meshStandardMaterial color="#100400" roughness={1} />
+        </mesh>
+        <pointLight color="#ff5500" intensity={3} distance={4} decay={2}
+          position={[2, 0.8, back + 0.5]} />
+        {/* Barrel */}
+        <mesh position={[2.5, 0.55, back + 1.8]}>
+          <cylinderGeometry args={[0.28, 0.32, 1.1, 10]} />
+          <meshStandardMaterial color={WOOD} roughness={0.95} />
+        </mesh>
+        {/* Tool rack horizontal bar */}
+        <Box position={[-2.5, 2.6, back + 0.1]} args={[1.8, 0.1, 0.1]} color={IRON} />
+        {/* Hanging tools */}
+        {[-3.2, -2.8, -2.4, -2.0].map((bx, i) => (
+          <Box key={i} position={[bx, 2.1, back + 0.12]} args={[0.06, 0.8, 0.06]} color={IRON} />
+        ))}
+      </group>
+    );
+  }
+
+  // contact — Portal: ritual circle + standing stones + altar
+  return (
+    <group>
+      {/* Floor ritual rings */}
+      {[0.8, 1.4, 2.0].map((r, i) => (
+        <mesh key={i} rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.07, back + 2.5]}>
+          <ringGeometry args={[r - 0.1, r, 32]} />
+          <meshStandardMaterial color="#8855cc" emissive="#8855cc" emissiveIntensity={0.4 - i * 0.1} />
+        </mesh>
+      ))}
+      {/* Four standing stones */}
+      {[[-1.5, back + 1.2], [1.5, back + 1.2], [-1.5, back + 3.8], [1.5, back + 3.8]].map(([sx, sz], i) => (
+        <Box key={i} position={[sx as number, 1.1, sz as number]} args={[0.3, 2.2, 0.25]} color={STONE_L} />
+      ))}
+      {/* Central altar */}
+      <Box position={[0, 0.4, back + 2.5]} args={[0.8, 0.8, 0.8]} color={STONE_D} />
+      <Box position={[0, 0.85, back + 2.5]} args={[1.0, 0.12, 1.0]} color={STONE_L} />
+      {/* Floating rune symbols (thin boxes) */}
+      {[[-1, 1.8], [1, 2.1], [0, 2.4]].map(([rx, ry], i) => (
+        <mesh key={i} position={[rx as number, ry as number, back + 2.5]}
+          rotation={[0, (i * Math.PI) / 3, 0.3 * i]}>
+          <boxGeometry args={[0.35, 0.05, 0.35]} />
+          <meshStandardMaterial color="#8855cc" emissive="#8855cc" emissiveIntensity={1} transparent opacity={0.75} />
+        </mesh>
+      ))}
+    </group>
+  );
+}
+
 // ─── Ruined building ─────────────────────────────────────────────────
 // The entrance faces south (+Z). The building extends north (-Z).
 // cx/cz = center of the building footprint.
@@ -126,119 +265,111 @@ function RuinedBuilding({
   cx, cz,
   doorId,
   isNear,
-  onEnter,
 }: {
   cx: number; cz: number;
   doorId: DoorId;
   isNear: boolean;
-  onEnter: () => void;
 }) {
-  const cfg = DOOR_CONFIG[doorId];
+  const cfg  = DOOR_CONFIG[doorId];
   const W = 8, D = 7, H = 5;
   const hw = W / 2, hd = D / 2;
-
-  // Entrance gap width
-  const gapW = 2.4;
+  const gapW  = 2.4;
   const sideW = (W - gapW) / 2;
+  const BEAM  = '#2a1a08';
 
   return (
     <group position={[cx, 0, cz]}>
       {/* ── Floor slab ── */}
       <Box position={[0, 0.06, 0]} args={[W, 0.14, D]} color={STONE_D} roughness={1} />
 
-      {/* ── Back wall (north) — mostly intact ── */}
-      <Box position={[0, H / 2, -hd]}          args={[W,     H,       0.45]} color={STONE} />
+      {/* ── Back wall (north) — intact ── */}
+      <Box position={[0, H / 2, -hd]} args={[W, H, 0.45]} color={STONE} />
 
-      {/* ── West wall — partial, broken at top ── */}
-      <Box position={[-hw, H * 0.38, 0]}        args={[0.4, H * 0.76, D]}    color={STONE} />
-      <Box position={[-hw, H * 0.82, -hd * 0.4]} args={[0.45, H * 0.12, D * 0.55]} color={STONE_D} />
+      {/* ── West wall with window opening ── */}
+      {/* Below window */}
+      <Box position={[-hw, 0.75, 0]}            args={[0.42, 1.5, D]}       color={STONE} />
+      {/* Pillar north of window */}
+      <Box position={[-hw, H * 0.5, -hd * 0.52]} args={[0.42, H, D * 0.35]} color={STONE} />
+      {/* Pillar south of window */}
+      <Box position={[-hw, H * 0.4, +hd * 0.45]} args={[0.42, H * 0.82, D * 0.35]} color={STONE} />
+      {/* Lintel above window */}
+      <Box position={[-hw, 3.55, 0]}             args={[0.42, 1.5, 1.6]}    color={STONE} />
+      {/* Window shadow box — dark recess */}
+      <mesh position={[-hw + 0.22, 2.3, 0]}>
+        <boxGeometry args={[0.08, 1.5, 2.1]} />
+        <meshStandardMaterial color="#030201" roughness={1} />
+      </mesh>
 
-      {/* ── East wall — more ruined (shorter) ── */}
-      <Box position={[+hw, H * 0.28, 0]}        args={[0.4, H * 0.56, D]}    color={STONE} />
+      {/* ── East wall — ruined (shorter) ── */}
+      <Box position={[+hw, H * 0.28, 0]}         args={[0.42, H * 0.56, D]} color={STONE} />
+      {/* Broken top chunk */}
+      <Box position={[+hw, H * 0.72, -hd * 0.3]} args={[0.44, H * 0.16, D * 0.4]} color={STONE_D} />
 
-      {/* ── South wall — left section (west of entrance) ── */}
-      <Box
-        position={[-hw + sideW / 2, H / 2, +hd]}
-        args={[sideW, H, 0.4]}
-        color={STONE}
-      />
-      {/* ── South wall — right section (east of entrance) ── */}
-      <Box
-        position={[+hw - sideW / 2, H / 2, +hd]}
-        args={[sideW, H, 0.4]}
-        color={STONE}
-      />
-      {/* ── Lintel above entrance ── */}
-      <Box position={[0, 3.1, +hd]}  args={[gapW + 0.4, 0.35, 0.55]} color={STONE_D} />
-      {/* ── Doorstep ── */}
-      <Box position={[0, 0.12, +hd + 0.2]} args={[gapW, 0.22, 0.4]} color={STONE_L} />
+      {/* ── South wall — flanking the entrance ── */}
+      <Box position={[-hw + sideW / 2, H / 2, +hd]} args={[sideW, H, 0.4]}  color={STONE} />
+      <Box position={[+hw - sideW / 2, H / 2, +hd]} args={[sideW, H, 0.4]}  color={STONE} />
+      {/* Lintel above entrance */}
+      <Box position={[0, 3.1, +hd]}              args={[gapW + 0.4, 0.35, 0.55]} color={STONE_D} />
+      {/* Doorstep */}
+      <Box position={[0, 0.12, +hd + 0.2]}       args={[gapW, 0.22, 0.4]} color={STONE_L} />
 
-      {/* ── Wall cracks / detail lines (thin dark strips) ── */}
-      <Box position={[-hw, H * 0.65, -hd * 0.7]} args={[0.41, 0.05, D * 0.3]} color={STONE_D} />
-      <Box position={[0, H * 0.4, -hd]}           args={[W * 0.3, 0.06, 0.46]} color={STONE_D} />
+      {/* ── Partial ruined roof ── */}
+      {/* Main west slab — covers most of the roof */}
+      <Box position={[-hw * 0.25, H + 0.2, -hd * 0.12]} args={[W * 0.58, 0.32, D * 0.82]} color={STONE_D} />
+      {/* East partial slab — smaller, slightly lower */}
+      <Box position={[+hw * 0.42, H + 0.06, -hd * 0.2]} args={[W * 0.3, 0.32, D * 0.52]} color={STONE} />
+      {/* Collapsed chunk near entrance — tilted */}
+      <mesh position={[0.4, H - 0.65, +hd * 0.25]} rotation={[0.22, 0.08, -0.14]}>
+        <boxGeometry args={[W * 0.32, 0.32, D * 0.28]} />
+        <meshStandardMaterial color={STONE_D} roughness={0.95} />
+      </mesh>
+      {/* Ceiling beams (visible from inside) */}
+      <Box position={[-1.2, H - 0.08, 0]} args={[0.18, 0.18, D * 0.88]} color={BEAM} />
+      <Box position={[+1.2, H - 0.22, 0]} args={[0.18, 0.18, D * 0.65]} color={BEAM} />
+      <Box position={[0,    H - 0.14, -hd * 0.2]} args={[W * 0.7, 0.14, 0.18]} color={BEAM} />
 
-      {/* ── Rubble ── */}
+      {/* ── Rubble at wall bases ── */}
       <RubblePile position={[-hw + 0.5, 0, -hd * 0.5]} />
       <RubblePile position={[+hw - 0.6, 0,  hd * 0.3]} />
-      <RubblePile position={[0,         0, -hd + 0.4]} />
+
+      {/* ── Pedestal for glow orb ── */}
+      <Box position={[0, 0.38, -hd * 0.35]} args={[0.65, 0.76, 0.65]} color={STONE_D} />
+      <Box position={[0, 0.8,  -hd * 0.35]} args={[0.82, 0.1,  0.82]} color={STONE_L} />
 
       {/* ── Interior coloured glow ── */}
-      <pointLight
-        color={cfg.lightColor}
-        intensity={isNear ? 8 : 3.5}
-        distance={12}
-        decay={2}
-        position={[0, 1.5, 0]}
-      />
-      {/* Glow orb visible through entrance */}
-      <mesh position={[0, 1.6, -hd * 0.3]}>
-        <sphereGeometry args={[0.18, 10, 10]} />
-        <meshStandardMaterial
-          color={cfg.lightColor}
-          emissive={cfg.lightColor}
-          emissiveIntensity={isNear ? 5 : 2.5}
-        />
+      <pointLight color={cfg.lightColor} intensity={isNear ? 8 : 3.5}
+        distance={12} decay={2} position={[0, 1.5, 0]} />
+      {/* Orb resting on pedestal */}
+      <mesh position={[0, 1.05, -hd * 0.35]}>
+        <sphereGeometry args={[0.2, 12, 12]} />
+        <meshStandardMaterial color={cfg.lightColor} emissive={cfg.lightColor}
+          emissiveIntensity={isNear ? 5 : 2.5} />
       </mesh>
+
+      {/* ── Themed interior ── */}
+      <BuildingInterior id={doorId} hd={hd} />
 
       {/* ── Torches flanking entrance ── */}
       <Torch position={[-(gapW / 2 + 0.3), 2.5, +hd + 0.05]} />
       <Torch position={[+(gapW / 2 + 0.3), 2.5, +hd + 0.05]} />
 
       {/* ── Label above entrance ── */}
-      <Html
-        position={[0, H + 1.0, +hd]}
-        center
-        occlude={false}
-        distanceFactor={8}
-        style={{ pointerEvents: 'none' }}
-      >
-        <div
-          onClick={onEnter}
-          style={{
-            fontFamily:    "'Press Start 2P', monospace",
-            fontSize:      '13px',
-            color:         isNear ? '#ffffff' : 'rgba(255,255,255,0.6)',
-            textAlign:     'center',
-            whiteSpace:    'nowrap',
-            textShadow:    `0 0 14px ${cfg.lightColor}, 0 0 28px ${cfg.lightColor}`,
-            transition:    'color 0.25s',
-            pointerEvents: 'none',
-            lineHeight:    1.7,
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>{cfg.icon}</span>
-          <br />
-          {cfg.label}
+      <Html position={[0, H + 1.0, +hd]} center occlude={false}
+        distanceFactor={8} style={{ pointerEvents: 'none' }}>
+        <div style={{
+          fontFamily: "'Press Start 2P', monospace", fontSize: '13px',
+          color: isNear ? '#ffffff' : 'rgba(255,255,255,0.6)',
+          textAlign: 'center', whiteSpace: 'nowrap',
+          textShadow: `0 0 14px ${cfg.lightColor}, 0 0 28px ${cfg.lightColor}`,
+          transition: 'color 0.25s', pointerEvents: 'none', lineHeight: 1.7,
+        }}>
+          <span style={{ fontSize: '20px' }}>{cfg.icon}</span><br />{cfg.label}
           {isNear && (
             <div style={{
-              marginTop:     8,
-              fontSize:      '11px',
-              color:         cfg.lightColor,
-              animation:     'door-pulse 0.8s ease-in-out infinite alternate',
+              marginTop: 8, fontSize: '11px', color: cfg.lightColor,
+              animation: 'door-pulse 0.8s ease-in-out infinite alternate',
               letterSpacing: '0.06em',
-            }}>
-              [ E ] Enter
-            </div>
+            }}>[ E ] Enter</div>
           )}
         </div>
       </Html>
@@ -373,11 +504,9 @@ function ScaryEvents({ onFlash }: { onFlash: () => void }) {
 
 function CityWorld({
   nearDoor,
-  onDoorClick,
   onFlash,
 }: {
   nearDoor:    DoorId | null;
-  onDoorClick: (id: DoorId) => void;
   onFlash:     () => void;
 }) {
   return (
@@ -398,28 +527,24 @@ function CityWorld({
         cx={-10} cz={-1.5}
         doorId="quests"
         isNear={nearDoor === 'quests'}
-        onEnter={() => onDoorClick('quests')}
       />
       {/* East: Spellbook (skills) */}
       <RuinedBuilding
         cx={10} cz={-1.5}
         doorId="skills"
         isNear={nearDoor === 'skills'}
-        onEnter={() => onDoorClick('skills')}
       />
       {/* North-west: The Forge (projects) */}
       <RuinedBuilding
         cx={-5} cz={-12}
         doorId="projects"
         isNear={nearDoor === 'projects'}
-        onEnter={() => onDoorClick('projects')}
       />
       {/* North-east: Portal (contact) */}
       <RuinedBuilding
         cx={5} cz={-12}
         doorId="contact"
         isNear={nearDoor === 'contact'}
-        onEnter={() => onDoorClick('contact')}
       />
 
       {/* ── Central ruined fountain / plaza ── */}
@@ -613,7 +738,7 @@ export default function World3D() {
         />
 
         <PlayerRig onNearDoor={setNearDoor} />
-        <CityWorld nearDoor={nearDoor} onDoorClick={dispatchDoor} onFlash={triggerFlash} />
+        <CityWorld nearDoor={nearDoor} onFlash={triggerFlash} />
       </Canvas>
     </div>
   );
