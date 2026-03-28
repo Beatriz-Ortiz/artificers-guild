@@ -2,13 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link
-      rel="icon"
-      type="image/svg+xml"
-      href="/assets/artificer_portrait.png"
-    />
+    <link rel="icon" type="image/png" href="/assets/artificer_portrait.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Artificer´s Guild</title>
+    <title>Artificer's Guild</title>
+
+    <!-- Preconnect: reduces DNS + TLS handshake time for Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--
+      Load fonts as a <link> (parsed before CSSOM, faster than @import).
+      display=block: browser holds text invisible until fonts arrive —
+      eliminates FOUT entirely for the intro sequence.
+    -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Press+Start+2P&family=JetBrains+Mono:wght@400;500&display=block"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <div id="root"></div>

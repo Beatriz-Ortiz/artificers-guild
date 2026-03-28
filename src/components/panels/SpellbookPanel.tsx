@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import ParchmentPanel from '../shared/ParchmentPanel';
+import ConstellationView from './ConstellationView';
 import type { Skill, SkillSchool } from '../../types/cv';
 import { SKILL_LEVEL_NAMES, SKILL_SCHOOL_LABELS } from '../../types/cv';
 
@@ -116,17 +117,52 @@ function SchoolPage({
   );
 }
 
+type ViewMode = 'list' | 'constellation';
+
 export default function SpellbookPanel({ skills, onClose }: Props) {
   const [activeSchool, setActiveSchool] = useState<SkillSchool>('arcane');
+  const [viewMode, setViewMode] = useState<ViewMode>('list');
 
   return (
     <ParchmentPanel
       title="Spellbook"
       subtitle="SCHOOLS OF MAGIC"
       onClose={onClose}
-      width="min(780px, 96vw)"
+      width="min(820px, 96vw)"
     >
-      <div
+      {/* View toggle */}
+      <div style={{ display: 'flex', gap: 8, marginBottom: 16, justifyContent: 'flex-end' }}>
+        {(['list', 'constellation'] as ViewMode[]).map((mode) => (
+          <button
+            key={mode}
+            onClick={() => setViewMode(mode)}
+            style={{
+              background:   viewMode === mode ? 'rgba(201,168,76,0.2)' : 'none',
+              border:       `1px solid rgba(201,168,76,${viewMode === mode ? 0.6 : 0.25})`,
+              borderRadius: 4,
+              cursor:       'pointer',
+              padding:      '5px 12px',
+              fontFamily:   'var(--font-pixel)',
+              fontSize:     '0.3rem',
+              color:        viewMode === mode ? 'var(--color-gold)' : 'var(--color-text-muted)',
+              letterSpacing: '0.06em',
+              transition:   'all 0.15s ease',
+            }}
+          >
+            {mode === 'list' ? '☰ List' : '✦ Constellation'}
+          </button>
+        ))}
+      </div>
+
+      {/* Constellation View */}
+      {viewMode === 'constellation' && (
+        <div style={{ animation: 'fade-in 0.25s ease', paddingBottom: 8 }}>
+          <ConstellationView skills={skills} />
+        </div>
+      )}
+
+      {/* List View */}
+      {viewMode === 'list' && <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(160px, 200px) 1fr',
@@ -202,7 +238,7 @@ export default function SpellbookPanel({ skills, onClose }: Props) {
         <div>
           <SchoolPage key={activeSchool} skills={skills} school={activeSchool} />
         </div>
-      </div>
+      </div>}
     </ParchmentPanel>
   );
 }
