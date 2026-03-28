@@ -14,6 +14,14 @@ import './styles/globals.css';
 export default function App() {
   const [introComplete, setIntroComplete] = useState(false);
   const [visitedPanels, setVisitedPanels] = useState<Set<PanelId>>(new Set());
+  // Gate all React UI on fonts being ready to eliminate FOUT.
+  // document.fonts.ready resolves once every font referenced in CSS
+  // has finished loading (or timed out with display=block).
+  const [fontsReady, setFontsReady] = useState(false);
+
+  useEffect(() => {
+    document.fonts.ready.then(() => setFontsReady(true));
+  }, []);
 
   const { activePanel, closePanel } = usePanelEvents();
   const { recruiterMode, enterRecruiterMode, exitRecruiterMode } = useRecruiterMode();
@@ -35,8 +43,8 @@ export default function App() {
         <Play />
       </div>
 
-      {/* ── Game UI layers (hidden in recruiter mode) ── */}
-      {!recruiterMode && (
+      {/* ── Game UI layers: only after fonts are ready ── */}
+      {fontsReady && !recruiterMode && (
         <>
           {/* Layer 5: Hub overlay (bottom bar + recruiter button) */}
           <HubOverlay
@@ -58,12 +66,12 @@ export default function App() {
       )}
 
       {/* ── Recruiter Mode: replaces everything ── */}
-      {recruiterMode && (
+      {fontsReady && recruiterMode && (
         <RecruiterModeView data={cv} onExit={exitRecruiterMode} />
       )}
 
-      {/* ── Intro sequence (shown until dismissed) ── */}
-      {!introComplete && (
+      {/* ── Intro sequence (shown until dismissed, fonts must be ready) ── */}
+      {fontsReady && !introComplete && (
         <IntroSequence onComplete={() => setIntroComplete(true)} />
       )}
     </div>
